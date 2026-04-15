@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Game</title>
+
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+min-height:100vh;
+}
+
+h1{margin-top:15px;}
+
+.top-bar{
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+background:rgba(255,255,255,0.2);
+padding:10px 15px;
+border-radius:15px;
+}
+
+.quiz-box{
+margin-top:20px;
+background:rgba(255,255,255,0.2);
+padding:20px;
+border-radius:15px;
+width:90%;
+max-width:500px;
+}
+
+.question{
+font-size:20px;
+margin-bottom:15px;
+}
+
+.option{
+background:white;
+color:black;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+cursor:pointer;
+text-align:center;
+}
+
+.option:hover{background:#ffe0b2;}
+
+.correct{background:#00c853!important;color:white;}
+.wrong{background:#d50000!important;color:white;}
+
+.result{display:none;margin-top:20px;text-align:center;}
+</style>
+</head>
+
+<body>
+
+<h1>🧠 Quiz Game</h1>
+
+<div class="top-bar">
+<span>Score: <b id="score">0</b></span>
+<span>Time: <b id="time">60</b>s</span>
+<button onclick="startGame()">Start</button>
+</div>
+
+<div class="quiz-box">
+<div class="question" id="question">Press Start</div>
+<div id="options"></div>
+</div>
+
+<div class="result" id="result">
+🎉 Quiz Completed!
+</div>
+
+<script>
+
+const questions = [
+
+/* ===== MATH (20) ===== */
+{q:"2 + 3 = ?",options:["4","5","6","7"],answer:1},
+{q:"5 + 7 = ?",options:["10","11","12","13"],answer:2},
+{q:"10 - 4 = ?",options:["5","6","7","8"],answer:1},
+{q:"6 × 2 = ?",options:["10","12","14","16"],answer:1},
+{q:"9 ÷ 3 = ?",options:["1","2","3","4"],answer:2},
+{q:"15 + 5 = ?",options:["18","19","20","21"],answer:2},
+{q:"20 - 10 = ?",options:["5","10","15","20"],answer:1},
+{q:"7 × 3 = ?",options:["18","20","21","24"],answer:2},
+{q:"12 ÷ 4 = ?",options:["2","3","4","5"],answer:1},
+{q:"8 + 9 = ?",options:["15","16","17","18"],answer:2},
+{q:"14 - 6 = ?",options:["6","7","8","9"],answer:2},
+{q:"9 + 6 = ?",options:["13","14","15","16"],answer:2},
+{q:"16 ÷ 4 = ?",options:["2","3","4","5"],answer:2},
+{q:"18 ÷ 3 = ?",options:["5","6","7","8"],answer:1},
+{q:"6 × 3 = ?",options:["15","16","17","18"],answer:3},
+{q:"8 × 2 = ?",options:["14","15","16","17"],answer:2},
+{q:"11 + 9 = ?",options:["18","19","20","21"],answer:2},
+{q:"13 - 5 = ?",options:["6","7","8","9"],answer:2},
+{q:"4 × 5 = ?",options:["10","15","20","25"],answer:2},
+{q:"25 ÷ 5 = ?",options:["3","4","5","6"],answer:2},
+
+/* ===== GK (15) ===== */
+{q:"Capital of India?",options:["Delhi","Mumbai","Chennai","Kolkata"],answer:0},
+{q:"National animal of India?",options:["Lion","Tiger","Elephant","Horse"],answer:1},
+{q:"National bird of India?",options:["Peacock","Parrot","Eagle","Crow"],answer:0},
+{q:"National flower of India?",options:["Rose","Lotus","Lily","Sunflower"],answer:1},
+{q:"Largest ocean?",options:["Indian","Atlantic","Pacific","Arctic"],answer:2},
+{q:"Which festival is festival of lights?",options:["Holi","Diwali","Eid","Christmas"],answer:1},
+{q:"How many days in a week?",options:["5","6","7","8"],answer:2},
+{q:"How many months in a year?",options:["10","11","12","13"],answer:2},
+{q:"Father of Nation (India)?",options:["Gandhi","Nehru","Patel","Tagore"],answer:0},
+{q:"Which is our national fruit?",options:["Apple","Mango","Banana","Orange"],answer:1},
+{q:"Which is our national tree?",options:["Neem","Peepal","Banyan","Coconut"],answer:2},
+{q:"Which is our national game?",options:["Cricket","Hockey","Football","Kabaddi"],answer:1},
+{q:"How many continents?",options:["5","6","7","8"],answer:2},
+{q:"Which is largest continent?",options:["Africa","Asia","Europe","Australia"],answer:1},
+{q:"Which is smallest continent?",options:["Asia","Europe","Australia","Africa"],answer:2},
+
+/* ===== SCIENCE (15) ===== */
+{q:"Sun is a?",options:["Planet","Star","Moon","Asteroid"],answer:1},
+{q:"Water formula?",options:["CO2","H2O","O2","NaCl"],answer:1},
+{q:"Plants make food by?",options:["Respiration","Photosynthesis","Digestion","Absorption"],answer:1},
+{q:"Which gas we breathe?",options:["Oxygen","Nitrogen","Hydrogen","Carbon"],answer:0},
+{q:"Earth is?",options:["Flat","Round","Square","Triangle"],answer:1},
+{q:"Which organ pumps blood?",options:["Brain","Heart","Liver","Kidney"],answer:1},
+{q:"Which part we use to see?",options:["Ear","Eye","Nose","Hand"],answer:1},
+{q:"Which part we use to hear?",options:["Eye","Ear","Nose","Mouth"],answer:1},
+{q:"Boiling point of water?",options:["50°C","100°C","150°C","200°C"],answer:1},
+{q:"Which planet is Red Planet?",options:["Earth","Mars","Venus","Jupiter"],answer:1},
+{q:"Which gas plants take in?",options:["Oxygen","Carbon dioxide","Nitrogen","Hydrogen"],answer:1},
+{q:"Human body has how many eyes?",options:["1","2","3","4"],answer:1},
+{q:"Which part we use to smell?",options:["Eye","Ear","Nose","Hand"],answer:2},
+{q:"Which planet is closest to Sun?",options:["Earth","Mars","Mercury","Venus"],answer:2},
+{q:"Which part helps us think?",options:["Heart","Brain","Liver","Kidney"],answer:1},
+
+/* ===== ENGLISH (10) ===== */
+{q:"Opposite of Hot?",options:["Warm","Cold","Cool","Heat"],answer:1},
+{q:"Plural of Cat?",options:["Cats","Cates","Catss","Caties"],answer:0},
+{q:"A for?",options:["Apple","Ball","Cat","Dog"],answer:0},
+{q:"Fill: I ___ going to school.",options:["is","am","are","be"],answer:1},
+{q:"Synonym of Happy?",options:["Sad","Angry","Joyful","Cry"],answer:2},
+{q:"Opposite of Big?",options:["Large","Huge","Small","Tall"],answer:2},
+{q:"Verb: She runs fast",options:["She","runs","fast","none"],answer:1},
+{q:"Plural of Child?",options:["Childs","Children","Childes","Childrens"],answer:1},
+{q:"Fill: He ___ a boy.",options:["is","are","am","be"],answer:0},
+{q:"Opposite of Day?",options:["Light","Night","Evening","Morning"],answer:1}
+
+];
+
+let current=0,score=0,time=60,timer;
+
+function startGame(){
+current=0;
+score=0;
+time=60;
+document.getElementById("score").textContent=0;
+document.getElementById("time").textContent=60;
+document.getElementById("result").style.display="none";
+loadQuestion();
+
+clearInterval(timer);
+timer=setInterval(()=>{
+time--;
+document.getElementById("time").textContent=time;
+if(time<=0){
+clearInterval(timer);
+endGame();
+}
+},1000);
+}
+
+function loadQuestion(){
+if(current>=questions.length){ endGame(); return; }
+
+let q=questions[current];
+document.getElementById("question").textContent=q.q;
+
+let html="";
+q.options.forEach((opt,i)=>{
+html+=`<div class="option" onclick="selectAnswer(${i})">${opt}</div>`;
+});
+document.getElementById("options").innerHTML=html;
+}
+
+function selectAnswer(i){
+let q=questions[current];
+let opts=document.querySelectorAll(".option");
+
+if(i===q.answer){
+opts[i].classList.add("correct");
+score++;
+}else{
+opts[i].classList.add("wrong");
+opts[q.answer].classList.add("correct");
+}
+
+document.getElementById("score").textContent=score;
+
+setTimeout(()=>{
+current++;
+loadQuestion();
+},800);
+}
+
+function endGame(){
+document.getElementById("result").style.display="block";
+document.getElementById("question").textContent="Game Over!";
+document.getElementById("options").innerHTML="";
+}
+
+</script>
+
+</body>
+</html>

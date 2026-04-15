@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Memory Game</title>
+
+<style>
+:root{
+--primary:#6c63ff;
+--bg:linear-gradient(135deg,#667eea,#764ba2);
+}
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:var(--bg);
+display:flex;
+flex-direction:column;
+align-items:center;
+color:white;
+min-height:100vh;
+}
+
+h1{
+margin-top:15px;
+font-size:clamp(22px,4vw,32px);
+}
+
+.top-bar{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+justify-content:center;
+align-items:center;
+background:rgba(255,255,255,0.15);
+padding:10px 15px;
+border-radius:15px;
+backdrop-filter:blur(10px);
+}
+
+.top-bar span{
+font-size:16px;
+}
+
+button,select{
+padding:8px 14px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button{
+background:#ff7b54;
+color:white;
+}
+
+button:hover{
+opacity:0.8;
+}
+
+select{
+background:white;
+color:black;
+}
+
+.board{
+display:grid;
+gap:10px;
+justify-content:center;
+margin-top:20px;
+width:95%;
+max-width:500px;
+}
+
+.card{
+position:relative;
+width:100%;
+aspect-ratio:1/1;
+transform-style:preserve-3d;
+transition:transform 0.5s;
+cursor:pointer;
+}
+
+.card.flip{
+transform:rotateY(180deg);
+}
+
+.face{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:12px;
+font-size:clamp(24px,5vw,40px);
+backface-visibility:hidden;
+box-shadow:0 5px 10px rgba(0,0,0,0.2);
+}
+
+.front{
+background:#ffffff30;
+}
+
+.back{
+background:white;
+color:black;
+transform:rotateY(180deg);
+}
+
+.win{
+margin-top:20px;
+font-size:clamp(20px,4vw,28px);
+display:none;
+text-align:center;
+}
+
+.stars{
+color:gold;
+font-size:24px;
+}
+
+@media(min-width:600px){
+.board{max-width:600px;}
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧠 Memory Game</h1>
+
+<div class="top-bar">
+<span>Moves: <b id="moves">0</b></span>
+<span>Time: <b id="time">0</b>s</span>
+
+<select id="level">
+<option value="4">Easy (4x4)</option>
+<option value="6">Medium (6x6)</option>
+<option value="8">Hard (8x8)</option>
+</select>
+
+<button onclick="startGame()">New Game</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="win" id="win">
+🎉 You Won!<br>
+<div class="stars" id="stars"></div>
+</div>
+
+<script>
+const emojis=["🍎","🍌","🍇","🍓","🍉","🍍","🥝","🍒","🥑","🍋","🍊","🍐","🍇","🍓","🍉","🍍","🥝","🍒","🥑","🍋","🍊","🍐"];
+
+let first=null,second=null,lock=false;
+let moves=0,time=0,timer;
+
+const board=document.getElementById("board");
+
+function startGame(){
+
+let size=parseInt(document.getElementById("level").value);
+board.style.gridTemplateColumns=`repeat(${size},1fr)`;
+
+let needed=(size*size)/2;
+let selected=emojis.slice(0,needed);
+let cards=[...selected,...selected];
+
+cards.sort(()=>Math.random()-0.5);
+
+board.innerHTML="";
+moves=0;
+time=0;
+document.getElementById("moves").textContent=0;
+document.getElementById("time").textContent=0;
+document.getElementById("win").style.display="none";
+
+clearInterval(timer);
+timer=setInterval(()=>{
+time++;
+document.getElementById("time").textContent=time;
+},1000);
+
+cards.forEach(e=>{
+let card=document.createElement("div");
+card.className="card";
+
+card.innerHTML=`
+<div class="face front">❓</div>
+<div class="face back">${e}</div>
+`;
+
+card.onclick=()=>flip(card);
+
+board.appendChild(card);
+});
+
+}
+
+function flip(card){
+
+if(lock || card===first) return;
+
+playSound(400);
+
+card.classList.add("flip");
+
+if(!first){
+first=card;
+return;
+}
+
+second=card;
+moves++;
+document.getElementById("moves").textContent=moves;
+
+if(first.innerText===second.innerText){
+playSound(700);
+first.onclick=null;
+second.onclick=null;
+reset();
+checkWin();
+}else{
+lock=true;
+setTimeout(()=>{
+first.classList.remove("flip");
+second.classList.remove("flip");
+reset();
+},700);
+}
+
+}
+
+function reset(){
+[first,second]=[null,null];
+lock=false;
+}
+
+function checkWin(){
+let all=document.querySelectorAll(".card").length;
+let flipped=document.querySelectorAll(".flip").length;
+
+if(all===flipped){
+clearInterval(timer);
+document.getElementById("win").style.display="block";
+
+let stars="⭐️⭐️⭐️";
+if(moves>30) stars="⭐️⭐️";
+if(moves>60) stars="⭐️";
+
+document.getElementById("stars").textContent=stars;
+
+playSound(1000);
+}
+}
+
+function playSound(freq){
+let ctx=new(window.AudioContext||window.webkitAudioContext)();
+let osc=ctx.createOscillator();
+osc.type="sine";
+osc.frequency.value=freq;
+osc.connect(ctx.destination);
+osc.start();
+osc.stop(ctx.currentTime+0.1);
+}
+
+startGame();
+</script>
+
+</body>
+</html>
+
